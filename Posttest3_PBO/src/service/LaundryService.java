@@ -4,9 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
+import model.Layanan;
+import model.LayananCuciKering;
+import model.LayananCuciKilat;
+import model.LayananCuciSetrika;
 import model.Mahasiswa;
 import model.Pengelola;
 import model.Pesanan;
+
 
 public class LaundryService {
     private final  List<Mahasiswa> mahasiswaList = new ArrayList<>();
@@ -17,7 +22,7 @@ public class LaundryService {
     private Pengelola loggedInPengelola = null;
 
     public void mulai() {
-        pengelolaList.add(new Pengelola("admin", "admin123", "08129876543"));
+        pengelolaList.add(new Pengelola("admin", "admin123"));
 
         while (true) {
             System.out.println("\n1. Daftar Mahasiswa\n2. Login Mahasiswa\n3. Login Pengelola\n4. Keluar");
@@ -141,13 +146,10 @@ public class LaundryService {
         }
     }
     
-    
-
     private void buatPesanan() {
-        String idPesanan = "PSN-" + UUID.randomUUID().toString().substring(0, 8); // ID otomatis
+        String idPesanan = "PSN-" + UUID.randomUUID().toString().substring(0, 8);
         System.out.println("ID Pesanan: " + idPesanan);
     
-        // Pilih layanan dengan validasi input
         int pilihan;
         while (true) {
             System.out.println("Pilih layanan:");
@@ -155,76 +157,98 @@ public class LaundryService {
             System.out.println("2. Cuci Setrika - Rp 15.000 - 3 Jam");
             System.out.println("3. Cuci Kilat - Rp 20.000 - 1 Jam");
             System.out.print("Pilihan: ");
-            
+    
             try {
-                pilihan = Integer.parseInt(scanner.nextLine()); // Gunakan nextLine() agar tidak ada bug newline
-                if (pilihan >= 1 && pilihan <= 3) break; // Jika input valid, keluar dari loop
+                pilihan = Integer.parseInt(scanner.nextLine());
+                if (pilihan >= 1 && pilihan <= 3) break;
                 System.out.println("⚠️ Pilihan tidak valid! Masukkan angka 1-3.");
             } catch (NumberFormatException e) {
                 System.out.println("⚠️ Input harus berupa angka! Silakan coba lagi.");
             }
         }
     
-        // Menentukan layanan berdasarkan pilihan
-        String layanan = "";
-        int estimasiHarga = 0;
-        String perkiraanWaktu = "";
+        // Deklarasikan layanan dulu
+        Layanan layanan;
     
+        // Inisialisasi sesuai pilihan
         switch (pilihan) {
-            case 1 -> {
-                layanan = "Cuci Kering";
-                estimasiHarga = 10000;
-                perkiraanWaktu = "2 Jam";
-            }
-            case 2 -> {
-                layanan = "Cuci Setrika";
-                estimasiHarga = 15000;
-                perkiraanWaktu = "3 Jam";
-            }
-            case 3 -> {
-                layanan = "Cuci Kilat";
-                estimasiHarga = 20000;
-                perkiraanWaktu = "1 Jam";
+            case 1 -> layanan = new LayananCuciKering();
+            case 2 -> layanan = new LayananCuciSetrika();
+            case 3 -> layanan = new LayananCuciKilat();
+            default -> {
+                System.out.println("❌ Pilihan layanan tidak valid.");
+                return;
             }
         }
     
-        // Simpan pesanan ke daftar
-        pesananList.add(new Pesanan(idPesanan, loggedInMahasiswa.getNim(), layanan, estimasiHarga, perkiraanWaktu));
-        System.out.println("✅ Pesanan berhasil dibuat dengan ID: " + idPesanan);
-        System.out.println("🔹 Layanan: " + layanan);
-        System.out.println("💰 Estimasi Harga: Rp " + estimasiHarga);
-        System.out.println("⏳ Perkiraan Waktu: " + perkiraanWaktu);
-    }    
-    
+        // Pilih jenis barang (pakaian atau sprei)
+        String jenisBarang;
+        while (true) {
+            System.out.println("Pilih jenis barang:");
+            System.out.println("1. Pakaian");
+            System.out.println("2. Sprei");
+            System.out.print("Pilihan: ");
 
+            try {
+                int jenisPilihan = Integer.parseInt(scanner.nextLine());
+
+                switch (jenisPilihan) {
+                    case 1:
+                        jenisBarang = "pakaian";
+                        break;
+                    case 2:
+                        jenisBarang = "sprei";
+                        break;
+                    default:
+                        System.out.println("⚠️ Pilihan tidak valid! Masukkan angka 1-2.");
+                        continue; // kembali ke awal loop
+                }
+                break; // keluar dari loop jika input valid
+            } catch (NumberFormatException e) {
+                System.out.println("⚠️ Input harus berupa angka! Silakan coba lagi.");
+            }
+        }
+
+    
+        // Buat dan simpan pesanan
+        Pesanan pesanan = new Pesanan(idPesanan, loggedInMahasiswa.getNim(), layanan, "Menunggu", jenisBarang);
+        pesananList.add(pesanan);
+    
+        // Tampilkan detail pesanan
+        System.out.println("✅ Pesanan berhasil dibuat!");
+        System.out.println("🔹 ID: " + pesanan.getIdPesanan());
+        System.out.println("🔹 Layanan: " + layanan.getNamaLayanan());
+        System.out.println("💰 Estimasi Harga: Rp " + pesanan.getEstimasiHarga());
+        System.out.println("⏳ Perkiraan Waktu: " + layanan.getPerkiraanWaktu());
+    }
+    
+    
     private void lihatPesananMahasiswa() {
+        if (loggedInMahasiswa == null) {
+            System.out.println("⚠️ Anda belum login.");
+            return;
+        }
+    
         boolean adaPesanan = false;
         for (Pesanan p : pesananList) {
             if (p.getNimMahasiswa().equals(loggedInMahasiswa.getNim())) {
-                System.out.println("ID: " + p.getIdPesanan() + " | Layanan: " + p.getLayanan() +
-                        " | Harga: Rp " + p.getEstimasiHarga() + " | Waktu: " + p.getPerkiraanWaktu() +
-                        " | Status: " + p.getStatus());
+                Layanan layanan = p.getLayanan();
+                System.out.println("ID: " + p.getIdPesanan()
+                    + " | Layanan: " + layanan.getNamaLayanan()
+                    + " | Harga: Rp " + layanan.getEstimasiHarga()
+                    + " | Waktu: " + layanan.getPerkiraanWaktu()
+                    + " | Status: " + p.getStatus());
                 adaPesanan = true;
             }
         }
+    
         if (!adaPesanan) {
             System.out.println("⚠️ Anda belum memiliki pesanan.");
         }
-    }    
-
-    public List<Mahasiswa> getMahasiswaList() {
-        return new ArrayList<>(mahasiswaList);
-    }
-
-    public List<Pengelola> getPengelolaList() {
-        return new ArrayList<>(pengelolaList);
-    }
-
-    public List<Pesanan> getPesananList() {
-        return new ArrayList<>(pesananList);
     }
     
-
+    
+    
     private void perbaruiStatusPesanan() {
         while (true) {
             System.out.print("Masukkan ID pesanan yang ingin diperbarui: ");
