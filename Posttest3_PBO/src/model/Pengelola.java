@@ -1,12 +1,32 @@
 package model;
 
-public class Pengelola extends Pengguna {
-    public Pengelola(String username, String password, String noTelepon) {
-        super(username, password, noTelepon); // Memanggil constructor dari Pengguna
+public class Pengelola {
+    private final String username;
+    private String password; 
+
+    public Pengelola(String username, String password) {
+        this.username = "admin";
+        this.password = "admin123456"; 
+    }
+    
+    public String getUsername() {
+        return username;
     }
 
-    @Override
-    public void tampilkanInfo() {
-        System.out.println("Pengelola: " + username + " | No Telepon: " + noTelepon);
+    public String getPassword() {
+        return password;
     }
+
+    public void setPassword(String password) {
+        if (password.length() >= 6) { 
+            this.password = password;
+        } else {
+            System.out.println("⚠️ Password harus minimal 6 karakter!");
+        }
+    }
+
+    protected void resetPassword() {
+        this.password = "default123"; 
+    }
+
 }
